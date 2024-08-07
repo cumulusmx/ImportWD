@@ -175,11 +175,20 @@ namespace ImportWD
 		private static string GetYearMonthFromFileName(string fileName)
 		{
 			// Assuming the format is MonthYearSomeText.extension
-			string pattern = @"$(\d{1,2})(\d{4})"; // Matches MonthYear
+			string pattern = @"$(\d{5,6})"; // Matches MonthYear
 			Match match = Regex.Match(fileName, pattern);
 			if (match.Success)
 			{
-				return match.Groups[1].Value  + (match.Groups[0].Length == 1 ? "0" + match.Groups[0].Value : match.Groups[0].Value);
+				if (match.Value.Length == 5)
+				{
+					// 5 digits - add leading zero
+					return match.Value[1..] + "0" + match.Value[0];
+				}
+				else
+				{
+					// 6 digits
+					return match.Value[2..] + match.Value[0..2];
+				}
 			}
 			else
 			{
