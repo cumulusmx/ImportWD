@@ -132,6 +132,23 @@
 		}
 
 		/// <summary>
+		/// Converts wind supplied in knots to user units
+		/// </summary>
+		/// <param name="value">Wind in knots</param>
+		/// <returns>Wind in configured units</returns>
+		public static double WindKnotsToUser(double value)
+		{
+			return Program.Cumulus.Units.Wind switch
+			{
+				0 => value * 0.514444,
+				1 => value * 1.150779,
+				2 => value * 1.852,
+				3 => value,
+				_ => 0,
+			};
+		}
+
+		/// <summary>
 		/// Converts wind in user units to m/s
 		/// </summary>
 		/// <param name="value"></param>

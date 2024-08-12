@@ -240,6 +240,16 @@ namespace ImportWD
 			}
 		}
 
+		public static string GetLogFileName(DateTime thedate)
+		{
+			return thedate.ToString("yyyyMM") + "log.txt";
+		}
+
+		public static string GetExtraLogFileName(DateTime thedate)
+		{
+			return "ExtraLog" + thedate.ToString("yyyyMM") + "log.txt";
+		}
+
 	}
 
 	internal class StationUnits

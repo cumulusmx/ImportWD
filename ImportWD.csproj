@@ -9,6 +9,7 @@
     <StartupObject>ImportWD.Program</StartupObject>
     <Copyright>Copyright ©  2024-$([System.DateTime]::Now.ToString('yyyy')) Cumulus MX</Copyright>
     <Authors>Cumulus MX</Authors>
+    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
   </PropertyGroup>
 
 </Project>
