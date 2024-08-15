@@ -6,6 +6,14 @@ The ImportWD utility is a command line program written in .NET, so it will run o
 
 The utility will read your Weather Display log files and create corresponding Cumulus MX monthly log files. It does not create day file entries. After importing the monthly log files you must run the CreateMissing utility to create the day file entires from the ne wmonthly logs.
 
+The following log types are imported:
+
+- lg.txt
+- extralog.csv
+- vantagelog.txt
+- vantageextrasensorslog.txt
+- indoorlog.txt
+
 ## Installing
 Just copy all the files in the release zip file to your Cumulus MX root folder.
 

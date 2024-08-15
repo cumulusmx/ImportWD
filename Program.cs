@@ -84,11 +84,12 @@ namespace ImportWD
 			// MMYYYYlg.txt - general
 			// MMYYYYvantagelog.txt - solar & soil
 			// MMYYYYvantageextrasensorslog.txt - extra temp & humidity
+			// MMYYYYextralog.csv - extra sensors
 			// MMYYYYlg2.txt - temperature highs/lows
 			// MMYYYYlgsun.txt - sunshine hours
 			// MMYYYindoorlog.txt - indoor values
 			// MMYYYY1wirelog.txt - 1-wire sensors ???
-			// MMYYYYextralog.csv - ???
+			// MMYYYYextralog.csv - extra sensors
 
 			// BUT the month is a single digit for months 1-9, so to sort them we need to extract the month/year and swap them around, and also pad the month to two digits
 
@@ -114,6 +115,9 @@ namespace ImportWD
 
 			foreach (var file in fileDict)
 			{
+				LogMessage($"Processing file {file.Item2.Name}...");
+				LogConsole($"Processing file {file.Item2.Name}...", defConsoleColour);
+
 				if (lastyearmonth != file.Item1)
 				{
 					if (lastyearmonth == 0)
@@ -143,66 +147,92 @@ namespace ImportWD
 							ExtraLogFileRecords.Clear();
 						}
 					}
+				}
 
-					// determine the log file type
-					var logType = GetLogType(file.Item2.Name);
+				// determine the log file type
+				var logType = GetLogType(file.Item2.Name);
 
-					// open and read the file
-					string[] lines;
+				// open and read the file
+				string[] lines;
 
-					try
+				try
+				{
+					lines = File.ReadAllLines(file.Item2.FullName);
+				}
+				catch (Exception ex)
+				{
+					LogMessage($"Error opening file {file.Item2.FullName} - {ex.Message}");
+					LogConsole($"Error opening file {file.Item2.FullName} - {ex.Message}", ConsoleColor.Red);
+					LogConsole("Skipping to next file", defConsoleColour);
+					// abort this file
+					continue;
+				}
+
+				// foreach line in the file - skip the first line
+				foreach (var line in lines[1..])
+				{
+					// process line according to log type
+					switch (logType)
 					{
-						lines = File.ReadAllLines(file.Item2.FullName);
-					}
-					catch (Exception ex)
-					{
-						LogMessage($"Error opening file {file.Item2.FullName} - {ex.Message}");
-						LogConsole($"Error opening file {file.Item2.FullName} - {ex.Message}", ConsoleColor.Red);
-						LogConsole("Skipping to next file", defConsoleColour);
-						// abort this file
-						continue;
-					}
+						case "lg":
+							var lg = new WdLgRecord(line);
+							if (lg.Timestamp.HasValue)
+							{
+								ProcessLgRecord(lg);
+							}
+							break;
 
-					// foreach line in the file - skip the first line
-					foreach (var line in lines[1..])
-					{
-						// process line according to log type
-						switch (logType)
-						{
-							case "lg":
-								var lg = new WdLgRecord(line);
-								if (lg.Timestamp.HasValue)
-								{
-									ProcessLgRecord(lg);
-								}
-								break;
+						case "vantagelog":
+							var van = new WdVantageRecord(line);
+							if (van.Timestamp.HasValue)
+							{
+								ProcessVantageRecord(van);
+							}
+							break;
 
-							case "vantagelog":
-								var van = new WdVantageRecord(line);
-								if (van.Timestamp.HasValue)
-								{
-									ProcessVantageRecord(van);
-								}
-								break;
+						case "vantageextrasensorslog":
+							var vanex = new WdVantageExtraRecord(line);
+							if (vanex.Timestamp.HasValue)
+							{
+								ProcessVantageExtraRecord(vanex);
+							}
+							break;
 
-							case "vantageextrasensorslog":
-								var vanex = new WdVantageExtraRecord(line);
-								if (vanex.Timestamp.HasValue)
-								{
-									ProcessVantageExtraRecord(vanex);
-								}
-								break;
+						case "extralog":
+							var ex = new WdExtraSensorsRecord(line);
+							if (ex.Timestamp.HasValue)
+							{
+								ProcessExtraSensorsRecord(ex);
+							}
+							break;
 
-							case "indoorlog":
-								var ind = new WdIndoorRecord(line);
-								if (ind.Timestamp.HasValue)
-								{
-									ProcessIndoorRecord(ind);
-								}
-								break;
-						}
+						case "indoorlog":
+							var ind = new WdIndoorRecord(line);
+							if (ind.Timestamp.HasValue)
+							{
+								ProcessIndoorRecord(ind);
+							}
+							break;
 					}
 				}
+			}
+
+			// if monthlog.length > 0 then process it
+			if (LogFileRecords.Count > 0)
+			{
+				WriteLogFile();
+
+				// clear the list
+				LogFileRecords.Clear();
+			}
+
+			// if extramonthlog.length > 0 then process it
+			if (ExtraLogFileRecords.Count > 0)
+			{
+				WriteExtraLogFile();
+
+				// clear the list
+				ExtraLogFileRecords.Clear();
 			}
 		}
 
@@ -404,6 +434,32 @@ namespace ImportWD
 			}
 		}
 
+
+		private static void ProcessExtraSensorsRecord(WdExtraSensorsRecord rec)
+		{
+			if (!rec.Timestamp.HasValue)
+				return;
+
+			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out ExtraLogFileRecord extraLogRec))
+			{
+				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
+				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
+			}
+
+			for (var i = 0; i < 9; i++)
+			{
+				extraLogRec.Temperature[i] = rec.Temp[i];
+				extraLogRec.Humidity[i] = rec.Hum[i];
+
+				if (rec.Temp[i].HasValue && rec.Hum[i].HasValue)
+				{
+					// calculate the dew point
+					extraLogRec.Dewpoint[i] = ConvertUnits.TempCToUser(MeteoLib.DewPoint(ConvertUnits.UserTempToC(rec.Temp[i].Value), rec.Hum[i].Value));
+				}
+			}
+		}
+
+
 		private static void ProcessIndoorRecord(WdIndoorRecord rec)
 		{
 			if (!rec.Timestamp.HasValue)
@@ -536,7 +592,7 @@ namespace ImportWD
 		}
 
 
-		[GeneratedRegex(@"^\d{5,6}(lg|vantagelog|vantageextrasensorslog|indoorlog)\.txt$")]
+		[GeneratedRegex(@"^\d{5,6}((lg|vantagelog|vantageextrasensorslog|indoorlog)\.txt$|extralog\.csv$)")]
 		private static partial Regex FileNamesRegex();
 	}
 }
