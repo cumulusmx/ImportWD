@@ -6,7 +6,7 @@
 	{
 		private sealed class TupleComparer : Comparer<Tuple<TKey, TValue>>
 		{
-			public override int Compare(Tuple<TKey, TValue> x, Tuple<TKey, TValue> y)
+			public override int Compare(Tuple<TKey, TValue>? x, Tuple<TKey, TValue>? y)
 			{
 				if (x == null || y == null) return 0;
 

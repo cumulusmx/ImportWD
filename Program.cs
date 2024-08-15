@@ -6,16 +6,16 @@ namespace ImportWD
 {
 	static partial class Program
 	{
-		public static Cumulus Cumulus { get; set; }
-		public static string Location { get; set; }
+		public static Cumulus Cumulus { get; set; } = new Cumulus();
+		public static string Location { get; set; } = string.Empty;
 
 		private static ConsoleColor defConsoleColour;
 
-		public static string WdDataPath { get; set; }
-		public static string WdConfigTemp { get; set; }
-		public static string WdConfigWind { get; set; }
-		public static string WdConfigPress { get; set; }
-		public static string WdConfigRain { get; set; }
+		public static string WdDataPath { get; set; } = string.Empty;
+		public static string WdConfigTemp { get; set; } = string.Empty;
+		public static string WdConfigWind { get; set; } = string.Empty;
+		public static string WdConfigPress { get; set; } = string.Empty;
+		public static string WdConfigRain { get; set; } = string.Empty;
 
 
 		private static readonly SortedList<DateTime, LogFileRecord> LogFileRecords = [];
@@ -23,7 +23,7 @@ namespace ImportWD
 
 
 
-		static void Main(string[] args)
+		static void Main()
 		{
 			// Tell the user what is happening
 
@@ -246,7 +246,7 @@ namespace ImportWD
 		public static void LogDebugMessage(string message)
 		{
 #if DEBUG
-			//Trace.TraceInformation(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + message);
+			//Trace.TraceInformation(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + message)
 #endif
 		}
 
@@ -324,7 +324,7 @@ namespace ImportWD
 
 		private static int GetYearMonthFromFileName(string fileName)
 		{
-			var ret = "0";
+			var ret = string.Empty;
 
 			// Assuming the format is MonthYearSomeText.extension
 
@@ -362,11 +362,13 @@ namespace ImportWD
 
 		private static void ProcessLgRecord(WdLgRecord rec)
 		{
-			if (!rec.Timestamp.HasValue)
-				return;
+			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out LogFileRecord logRec))
+			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
 			}
@@ -387,11 +389,13 @@ namespace ImportWD
 
 		private static void ProcessVantageRecord(WdVantageRecord rec)
 		{
-			if (!rec.Timestamp.HasValue)
-				return;
+			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out LogFileRecord logRec))
+			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
 			}
@@ -400,8 +404,13 @@ namespace ImportWD
 			logRec.UVI = rec.UVI;
 			logRec.ET = rec.ET;
 
-			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out ExtraLogFileRecord extraLogRec))
+			ExtraLogFileRecord? extraLogRec;
+
+			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -412,11 +421,13 @@ namespace ImportWD
 
 		private static void ProcessVantageExtraRecord(WdVantageExtraRecord rec)
 		{
-			if (!rec.Timestamp.HasValue)
-				return;
+			ExtraLogFileRecord? extraLogRec;
 
-			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out ExtraLogFileRecord extraLogRec))
+			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -437,11 +448,13 @@ namespace ImportWD
 
 		private static void ProcessExtraSensorsRecord(WdExtraSensorsRecord rec)
 		{
-			if (!rec.Timestamp.HasValue)
-				return;
+			ExtraLogFileRecord? extraLogRec;
 
-			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out ExtraLogFileRecord extraLogRec))
+			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -462,11 +475,13 @@ namespace ImportWD
 
 		private static void ProcessIndoorRecord(WdIndoorRecord rec)
 		{
-			if (!rec.Timestamp.HasValue)
-				return;
+			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out LogFileRecord logRec))
+			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
 			{
+				if (!rec.Timestamp.HasValue)
+					return;
+
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
 			}

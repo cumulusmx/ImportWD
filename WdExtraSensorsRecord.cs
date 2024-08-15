@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace ImportWD
 {
-	internal class WdExtraSensorsRecord
+	internal partial class WdExtraSensorsRecord
 	{
 		// Uses comma+space separated fields
 		// 0 - day
@@ -32,14 +32,14 @@ namespace ImportWD
 
 		public DateTime? Timestamp { get; private set; }
 
-		public double?[] Temp { get; private set; } = { null, null, null, null, null, null, null, null, null };
+		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null, null, null];
 
-		public int?[] Hum { get; private set; } = { null, null, null, null, null, null, null, null, null };
+		public int?[] Hum { get; private set; } = [null, null, null, null, null, null, null, null, null];
 
 
 		public WdExtraSensorsRecord(string entry)
 		{
-			var arr = Regex.Split(entry, @"\s*[, ]\s*")
+			var arr = FieldSepRegex().Split(entry)
 				.Where(substring => !string.IsNullOrWhiteSpace(substring))
 				.ToArray();
 
@@ -95,5 +95,8 @@ namespace ImportWD
 				}
 			}
 		}
+
+		[GeneratedRegex(@"\s*[, ]\s*")]
+		private static partial Regex FieldSepRegex();
 	}
 }

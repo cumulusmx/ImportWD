@@ -4,9 +4,7 @@
 // *** (C)2009 S.T.A. snc ***
 // **************************
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 namespace ImportWD
@@ -21,7 +19,7 @@ namespace ImportWD
 		private readonly object m_Lock = new();
 
 		// *** File name ***
-		private string m_FileName = null;
+		private readonly string m_FileName;
 		internal string FileName
 		{
 			get
@@ -47,29 +45,27 @@ namespace ImportWD
 		// *** Constructor ***
 		public IniFile(string FileName)
 		{
-			Initialize(FileName, false);
+			m_FileName = FileName;
+			m_Lazy = false;
+			Refresh();
 		}
 
 		public IniFile(string FileName, bool Lazy)
-		{
-			Initialize(FileName, Lazy);
-		}
-
-		// Readonly - from string
-		public IniFile()
-		{
-			m_Lazy = false;
-		}
-
-
-		// *** Initialization ***
-		private void Initialize(string FileName, bool Lazy)
 		{
 			m_FileName = FileName;
 			m_Lazy = Lazy;
 			if (!m_Lazy) Refresh();
 		}
 
+		// Readonly - from string
+		public IniFile()
+		{
+			m_FileName = string.Empty;
+			m_Lazy = false;
+		}
+
+
+		// *** Initialization ***
 		// Load a supplied string rather than read from file
 		internal void LoadString(string[] inputStr)
 		{
@@ -77,7 +73,7 @@ namespace ImportWD
 			m_Sections.Clear();
 
 			// *** Read up the array content ***
-			Dictionary<string, string> CurrentSection = null;
+			Dictionary<string, string> CurrentSection = [];
 
 			foreach (var line in inputStr)
 			{
@@ -93,7 +89,7 @@ namespace ImportWD
 						// *** Only first occurrence of a section is loaded ***
 						if (m_Sections.ContainsKey(SectionName))
 						{
-							CurrentSection = null;
+							CurrentSection = [];
 						}
 						else
 						{
@@ -127,27 +123,25 @@ namespace ImportWD
 		{
 			lock (m_Lock)
 			{
-				FileStream fs = null;
-				StreamReader sr = null;
 				try
 				{
 					// *** Clear local cache ***
 					m_Sections.Clear();
 
 					// *** Open the INI file ***
-					if (File.Exists(m_FileName))
-					{
-						fs = new FileStream(m_FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-						sr = new StreamReader(fs);
-					}
-					else
+					if (!File.Exists(m_FileName))
 					{
 						return;
 					}
 
+					using var fs = new FileStream(m_FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+					using var sr = new StreamReader(fs);
+
+					if (sr == null) return;
+
 					// *** Read up the file content ***
-					Dictionary<string, string> CurrentSection = null;
-					string s;
+					Dictionary<string, string> CurrentSection = [];
+					string? s;
 					while ((s = sr.ReadLine()) != null)
 					{
 						s = s.Trim();
@@ -162,7 +156,7 @@ namespace ImportWD
 								// *** Only first occurrence of a section is loaded ***
 								if (m_Sections.ContainsKey(SectionName))
 								{
-									CurrentSection = null;
+									CurrentSection = [];
 								}
 								else
 								{
@@ -196,11 +190,9 @@ namespace ImportWD
 						}
 					}
 				}
-				finally
+				catch
 				{
-					// *** Cleanup: close file ***
-					if (sr != null) sr.Close();
-					if (fs != null) fs.Close();
+					// *** Ignore exceptions ***
 				}
 			}
 		}
@@ -285,11 +277,11 @@ namespace ImportWD
 			lock (m_Lock)
 			{
 				// *** Check if the section exists ***
-				Dictionary<string, string> Section;
+				Dictionary<string, string>? Section;
 				if (!m_Sections.TryGetValue(SectionName, out Section)) return false;
 
 				// *** Check if the key exists ***
-				string Value;
+				string? Value;
 				if (Section.TryGetValue(Key, out Value))
 					return true;
 				else
@@ -309,11 +301,11 @@ namespace ImportWD
 			lock (m_Lock)
 			{
 				// *** Check if the section exists ***
-				Dictionary<string, string> Section;
+				Dictionary<string, string>? Section;
 				if (!m_Sections.TryGetValue(SectionName, out Section)) return;
 
 				// *** Check if the key exists ***
-				string Value;
+				string? Value;
 				if (Section.TryGetValue(Key, out Value))
 				{
 					m_CacheModified = true;
@@ -326,7 +318,7 @@ namespace ImportWD
 		// *** Encode byte array ***
 		private static string EncodeByteArray(byte[] Value)
 		{
-			if (Value == null) return null;
+			if (Value == null) return string.Empty;
 
 			StringBuilder sb = new StringBuilder();
 			foreach (byte b in Value)
@@ -363,7 +355,7 @@ namespace ImportWD
 		// *** Encode bool array
 		private static string EncodeBoolArray(bool[] Value)
 		{
-			if (Value == null) return null;
+			if (Value == null) return string.Empty;
 
 			StringBuilder sb = new StringBuilder();
 			foreach (bool b in Value)
@@ -394,7 +386,7 @@ namespace ImportWD
 		// *** Encode string array - very basic, no escaped quotes allowed
 		private static string EncodeStringArray(string[] Value)
 		{
-			if (Value == null) return null;
+			if (Value == null) return string.Empty;
 
 			StringBuilder sb = new StringBuilder();
 			foreach (string b in Value)
@@ -419,7 +411,7 @@ namespace ImportWD
 
 		private static string EncodeIntArray(int[] Value)
 		{
-			if (Value == null) return null;
+			if (Value == null) return string.Empty;
 
 
 			return string.Join(",", Value);
@@ -453,11 +445,11 @@ namespace ImportWD
 			lock (m_Lock)
 			{
 				// *** Check if the section exists ***
-				Dictionary<string, string> Section;
+				Dictionary<string, string>? Section;
 				if (!m_Sections.TryGetValue(SectionName, out Section)) return DefaultValue;
 
 				// *** Check if the key exists ***
-				string Value;
+				string? Value;
 				if (!Section.TryGetValue(Key, out Value)) return DefaultValue;
 
 				// *** Check if the value is blank ***
@@ -592,7 +584,7 @@ namespace ImportWD
 				m_CacheModified = true;
 
 				// *** Check if the section exists ***
-				Dictionary<string, string> Section;
+				Dictionary<string, string>? Section;
 				if (!m_Sections.TryGetValue(SectionName, out Section))
 				{
 					// *** If it doesn't, add it ***

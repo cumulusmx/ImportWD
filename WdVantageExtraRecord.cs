@@ -27,9 +27,9 @@ namespace ImportWD
 
 		public DateTime? Timestamp { get; private set; }
 
-		public double?[] Temp { get; private set; } = { null, null, null, null, null, null, null };
+		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null];
 
-		public int?[] Hum { get; private set; } = { null, null, null, null, null, null, null };
+		public int?[] Hum { get; private set; } = [null, null, null, null, null, null, null];
 
 
 		public WdVantageExtraRecord(string entry)
