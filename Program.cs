@@ -115,9 +115,6 @@ namespace ImportWD
 
 			foreach (var file in fileDict)
 			{
-				LogMessage($"Processing file {file.Item2.Name}...");
-				LogConsole($"Processing file {file.Item2.Name}...", defConsoleColour);
-
 				if (lastyearmonth != file.Item1)
 				{
 					if (lastyearmonth == 0)
@@ -134,8 +131,18 @@ namespace ImportWD
 						{
 							WriteLogFile();
 
+							// WD logs have the first record of the next month as the last record of the previous month
+							var logTim = LogFileRecords.Last().Key;
+							var logRec = LogFileRecords.Last().Value;
+
 							// clear the list
 							LogFileRecords.Clear();
+
+							// if the last record is for this next month then add it to the next month
+							if (file.Item1 == logTim.Year * 100 + logTim.Month)
+							{
+								LogFileRecords.Add(logTim, logRec);
+							}
 						}
 
 						// if extramonthlog.length > 0 then process it
@@ -143,11 +150,26 @@ namespace ImportWD
 						{
 							WriteExtraLogFile();
 
+							// WD logs have the first record of the next month as the last record of the previous month
+							var logTim = ExtraLogFileRecords.Last().Key;
+							var logRec = ExtraLogFileRecords.Last().Value;
+
 							// clear the list
 							ExtraLogFileRecords.Clear();
+
+							// if the last record is for this next month then add it to the next month
+							if (file.Item1 == logTim.Year * 100 + logTim.Month)
+							{
+								ExtraLogFileRecords.Add(logTim, logRec);
+							}
 						}
+
+						lastyearmonth = file.Item1;
 					}
 				}
+
+				LogMessage($"Processing file {file.Item2.Name}...");
+				LogConsole($"Processing file {file.Item2.Name}...", defConsoleColour);
 
 				// determine the log file type
 				var logType = GetLogType(file.Item2.Name);
@@ -534,12 +556,14 @@ namespace ImportWD
 					try
 					{
 						var line = rec.Value.RecToCsv();
-						if (null != line)
+						if (!string.IsNullOrEmpty(line))
+						{
 							file.WriteLine(line);
+						}
 					}
-					catch
+					catch (Exception ex)
 					{
-						// ignore errors
+						Program.LogMessage($"Error writing to {logfilename}: {rec.Key} - {ex.Message}");
 					}
 				}
 
@@ -593,8 +617,10 @@ namespace ImportWD
 				foreach (var rec in ExtraLogFileRecords)
 				{
 					var line = rec.Value.RecToCsv();
-					if (null != line)
+					if (!string.IsNullOrEmpty(line))
+					{
 						file.WriteLine(line);
+					}
 				}
 
 				file.Close();
