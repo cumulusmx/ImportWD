@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace ImportWD
@@ -346,28 +345,13 @@ namespace ImportWD
 
 		private static int GetYearMonthFromFileName(string fileName)
 		{
-			var ret = string.Empty;
-
-			// Assuming the format is MonthYearSomeText.extension
-
-			var extract = new string(fileName.Where(c => char.IsBetween(c, '0', '9')).ToArray());
-
-			if (extract.Length == 5)
+			var match = ExtractMonthYearRegex().Match(fileName);
+			if (match.Success)
 			{
-				// 5 digits - add leading zero
-				ret = extract[1..] + "0" + extract[0];
+				var year = int.Parse(match.Groups[2].Value);
+				var month = int.Parse(match.Groups[1].Value);
+				return year * 100 + month;
 			}
-			else
-			{
-				// 6 digits
-				ret = extract[2..] + extract[0..2];
-			}
-
-			if (int.TryParse(ret, out int val))
-			{
-				return val;
-			}
-
 			return 0;
 		}
 
@@ -431,7 +415,9 @@ namespace ImportWD
 			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
 				if (!rec.Timestamp.HasValue)
+				{
 					return;
+				}
 
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
@@ -448,7 +434,9 @@ namespace ImportWD
 			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
 				if (!rec.Timestamp.HasValue)
+				{
 					return;
+				}
 
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
@@ -475,7 +463,9 @@ namespace ImportWD
 			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
 				if (!rec.Timestamp.HasValue)
+				{
 					return;
+				}
 
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
@@ -502,7 +492,9 @@ namespace ImportWD
 			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
 			{
 				if (!rec.Timestamp.HasValue)
+				{
 					return;
+				}
 
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
@@ -514,7 +506,15 @@ namespace ImportWD
 
 		private static void WriteLogFile()
 		{
+			if (LogFileRecords.First().Key.Month != LogFileRecords.GetKeyAtIndex(1).Month)
+			{
+				LogFileRecords.Remove(LogFileRecords.First().Key);
+			}
+
 			var logfilename = "data" + Path.DirectorySeparatorChar + Cumulus.GetLogFileName(LogFileRecords.First().Key);
+			var currYear = LogFileRecords.First().Key.Year;
+			var currMonth = LogFileRecords.First().Key.Month;
+
 
 			Program.LogMessage($"Writing {LogFileRecords.Count} records to {logfilename}");
 			Program.LogConsole($"  Writing to {logfilename}", ConsoleColor.Gray);
@@ -555,10 +555,13 @@ namespace ImportWD
 				{
 					try
 					{
-						var line = rec.Value.RecToCsv();
-						if (!string.IsNullOrEmpty(line))
+						if (rec.Key.Month == currMonth && rec.Key.Year == currYear)
 						{
-							file.WriteLine(line);
+							var line = rec.Value.RecToCsv();
+							if (!string.IsNullOrEmpty(line))
+							{
+								file.WriteLine(line);
+							}
 						}
 					}
 					catch (Exception ex)
@@ -578,6 +581,11 @@ namespace ImportWD
 
 		private static void WriteExtraLogFile()
 		{
+			if (ExtraLogFileRecords.First().Key.Month != ExtraLogFileRecords.GetKeyAtIndex(1).Month)
+			{
+				ExtraLogFileRecords.Remove(ExtraLogFileRecords.First().Key);
+			}
+
 			var logfilename = "data" + Path.DirectorySeparatorChar + Cumulus.GetExtraLogFileName(ExtraLogFileRecords.First().Key);
 			Program.LogMessage($"Writing {ExtraLogFileRecords.Count} records to {logfilename}");
 			Program.LogConsole($"  Writing to {logfilename}", ConsoleColor.Gray);
@@ -635,5 +643,8 @@ namespace ImportWD
 
 		[GeneratedRegex(@"^\d{5,6}((lg|vantagelog|vantageextrasensorslog|indoorlog)\.txt$|extralog\.csv$)")]
 		private static partial Regex FileNamesRegex();
+
+		[GeneratedRegex(@"(\d{1,2})(\d{4})")]
+		private static partial Regex ExtractMonthYearRegex();
 	}
 }
