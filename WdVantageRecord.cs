@@ -16,7 +16,7 @@ namespace ImportWD
 		// 8 - Soil moisture
 		// 9 - Soil temperature
 
-		public DateTime? Timestamp { get; private set; }
+		public DateTime? Timestamp { get; set; }
 		public int? SolarRad { get; private set; }
 		public double? UVI { get; private set; }
 		public double? ET { get; private set; }

@@ -20,7 +20,8 @@ namespace ImportWD
 		private static readonly SortedList<DateTime, LogFileRecord> LogFileRecords = [];
 		private static readonly SortedList<DateTime, ExtraLogFileRecord> ExtraLogFileRecords = [];
 
-
+		private static int CurrMonth;
+		private static int CurrYear;
 
 		static void Main()
 		{
@@ -120,6 +121,8 @@ namespace ImportWD
 					{
 						// starting up
 						lastyearmonth = file.Item1;
+						CurrMonth = file.Item1 % 100;
+						CurrYear = file.Item1 / 100;
 					}
 					else
 					{
@@ -164,6 +167,8 @@ namespace ImportWD
 						}
 
 						lastyearmonth = file.Item1;
+						CurrMonth = file.Item1 % 100;
+						CurrYear = file.Item1 / 100;
 					}
 				}
 
@@ -375,6 +380,11 @@ namespace ImportWD
 				if (!rec.Timestamp.HasValue)
 					return;
 
+				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+				{
+					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+				}
+
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
 			}
@@ -401,6 +411,11 @@ namespace ImportWD
 			{
 				if (!rec.Timestamp.HasValue)
 					return;
+
+				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+				{
+					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+				}
 
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
@@ -438,6 +453,11 @@ namespace ImportWD
 					return;
 				}
 
+				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+				{
+					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+				}
+
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -467,6 +487,11 @@ namespace ImportWD
 					return;
 				}
 
+				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+				{
+					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+				}
+
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -494,6 +519,11 @@ namespace ImportWD
 				if (!rec.Timestamp.HasValue)
 				{
 					return;
+				}
+
+				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+				{
+					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0,	0, 0, DateTimeKind.Local);
 				}
 
 				logRec = new LogFileRecord(rec.Timestamp.Value);

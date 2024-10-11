@@ -23,7 +23,7 @@ namespace ImportWD
 		// 15 - rain year
 		// 16 - heat index
 
-		public DateTime? Timestamp { get; private set; }
+		public DateTime? Timestamp { get; set; }
 		public double? OutsideTemp { get; private set; }
 		public int? OutsideHumidity { get; private set; }
 		public double? Dewpoint { get; private set; }

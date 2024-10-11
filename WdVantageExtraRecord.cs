@@ -25,7 +25,7 @@ namespace ImportWD
 		// 17 - Hum-6
 		// 18 - Hum-7
 
-		public DateTime? Timestamp { get; private set; }
+		public DateTime? Timestamp { get; set; }
 
 		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null];
 

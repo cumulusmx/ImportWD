@@ -30,7 +30,7 @@ namespace ImportWD
 		// 21 - Temp-9
 		// 22 - Hum-9
 
-		public DateTime? Timestamp { get; private set; }
+		public DateTime? Timestamp { get; set; }
 
 		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null, null, null];
 

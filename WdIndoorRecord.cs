@@ -13,7 +13,7 @@ namespace ImportWD
 		// 5 - temperature
 		// 6 - humidity
 
-		public DateTime? Timestamp { get; private set; }
+		public DateTime? Timestamp { get; set; }
 
 		public double? Temp { get; private set; }
 
