@@ -34,6 +34,7 @@ namespace ImportWD
 			catch (Exception ex)
 			{
 				Program.LogMessage("  Error parsing date/time fields: " + ex.Message);
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing date/time fields: " + ex.Message, ConsoleColor.Red);
 				return;
 			}
@@ -46,6 +47,7 @@ namespace ImportWD
 			else
 			{
 				Program.LogMessage("  Error parsing field 6 (solar rad)");
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 6 (solar rad)", ConsoleColor.Red);
 			}
 
@@ -56,6 +58,7 @@ namespace ImportWD
 			else
 			{
 				Program.LogMessage("  Error parsing field 7 (UV-I)");
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 7 (UV-I)", ConsoleColor.Red);
 			}
 
@@ -66,6 +69,7 @@ namespace ImportWD
 			else
 			{
 				Program.LogMessage("  Error parsing field 8 (ET)");
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 8 (ET)", ConsoleColor.Red);
 			}
 
@@ -77,6 +81,7 @@ namespace ImportWD
 			else
 			{
 				Program.LogMessage("  Error parsing field 9 (soil moisture)");
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 9 (soil moisture)", ConsoleColor.Red);
 			}
 
@@ -87,6 +92,7 @@ namespace ImportWD
 			else
 			{
 				Program.LogMessage("  Error parsing field 8 (soil temperature)");
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 8 (soil temperature)", ConsoleColor.Red);
 			}
 		}

@@ -51,6 +51,7 @@ namespace ImportWD
 			catch (Exception ex)
 			{
 				Program.LogMessage("  Error parsing date/time fields: " + ex.Message);
+				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing date/time fields: " + ex.Message, ConsoleColor.Red);
 				return;
 			}
@@ -72,6 +73,7 @@ namespace ImportWD
 				else
 				{
 					Program.LogMessage($"  Error parsing field {i} (temperature-{i - 4})");
+					Program.LogMessage("  Error line: " + entry);
 					Program.LogConsole($"  Error parsing field {i} (temperature-{i - 4})", ConsoleColor.Red);
 				}
 			}
@@ -91,6 +93,7 @@ namespace ImportWD
 				else
 				{
 					Program.LogMessage($"  Error parsing field {i} (humidity-{i - 5})");
+					Program.LogMessage("  Error line: " + entry);
 					Program.LogConsole($"  Error parsing field {i} (humidity-{i - 5})", ConsoleColor.Red);
 				}
 			}
