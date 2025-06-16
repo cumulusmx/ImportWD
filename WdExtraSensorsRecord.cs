@@ -39,10 +39,7 @@ namespace ImportWD
 
 		public WdExtraSensorsRecord(string entry)
 		{
-			var arr = FieldSepRegex().Split(entry)
-				.Where(substring => !string.IsNullOrWhiteSpace(substring))
-				.ToArray();
-
+			var arr = entry.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
 			try
 			{

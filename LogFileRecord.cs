@@ -136,8 +136,9 @@ namespace ImportWD
 			else
 				sb.Append(sep);
 
-			if (CurrentGust.HasValue)
-				sb.Append(CurrentGust.Value.ToString(Program.Cumulus.WindFormat, inv) + sep);
+			//if (CurrentGust.HasValue) // no current gust value in WD logs, use the Gust value
+			if (WindGust.HasValue)
+				sb.Append(WindGust.Value.ToString(Program.Cumulus.WindFormat, inv) + sep);
 			else
 				sb.Append(sep);
 
