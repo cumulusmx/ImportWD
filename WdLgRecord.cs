@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text;
 
 namespace ImportWD
 {
@@ -197,6 +198,27 @@ namespace ImportWD
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 17 (heat index)", ConsoleColor.Red);
 			}
+		}
+
+		public override string ToString()
+		{
+			var inv = CultureInfo.InvariantCulture;
+			var sb = new StringBuilder(256);
+
+			sb.Append("LgFileRecord : ");
+			sb.Append("LogTime=" + Timestamp?.ToString("yyyy-MM-dd HH:mm:ss", inv) + ", ");
+			sb.Append("Temperature=" + OutsideTemp?.ToString(Program.Cumulus.TempFormat, inv)  + ", ");
+			sb.Append("Humidity=" + OutsideHumidity?.ToString() + ", ");
+			sb.Append("Dewpoint=" + Dewpoint?.ToString(Program.Cumulus.TempFormat, inv) + ", ");
+			sb.Append("WindSpeed=" + WindSpeed?.ToString(Program.Cumulus.WindFormat, inv) + ", ");
+			sb.Append("WindGust=" + WindGust?.ToString(Program.Cumulus.WindFormat, inv) + ", ");
+			sb.Append("WindBearing=" + WindDir + ", ");
+			sb.Append("RainfallRate=" + RainRate?.ToString(Program.Cumulus.RainFormat, inv) + ", ");
+			sb.Append("RainfallToday=" + RainDay?.ToString(Program.Cumulus.RainFormat, inv) + ", ");
+			sb.Append("Baro=" + Baro?.ToString(Program.Cumulus.PressFormat, inv) + ", ");
+			sb.Append("RainfallYear=" + RainYear?.ToString(Program.Cumulus.RainFormat, inv));
+
+			return sb.ToString();
 		}
 	}
 }

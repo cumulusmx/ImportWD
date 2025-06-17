@@ -94,151 +94,209 @@ namespace ImportWD
 			// BUT the month is a single digit for months 1-9, so to sort them we need to extract the month/year and swap them around, and also pad the month to two digits
 
 			//var fileDict = new SortedDictionary<int, FileInfo>(); // <year, month>
-			var fileDict = new SortedTupleBag<int, FileInfo>(); // <year, month>
+			//var fileDict = new SortedTupleBag<int, FileInfo>(); // <year, month>
 
 			var dirInfo = new DirectoryInfo(WdDataPath);
-			var wdFiles = dirInfo.EnumerateFiles("*", SearchOption.AllDirectories)
-					.Where(f => FileNamesRegex().IsMatch(f.Name));
+
+			//var wdFiles = dirInfo.EnumerateFiles("*", SearchOption.AllDirectories)
+			//		.Where(f => FileNamesRegex().IsMatch(f.Name));
 
 			// add valid files to a sorted dictionary
-			foreach (var file in wdFiles)
+			//foreach (var file in wdFiles)
+			//{
+			//	var ind = GetYearMonthFromFileName(file.Name);
+			//	if (ind > 0)
+			//	{
+			//		fileDict.Add(ind, file);
+			//	}
+			//}
+
+			var files = dirInfo.EnumerateFiles("*", SearchOption.AllDirectories)
+				//.Select(f => f.Name)
+				.Where(name => FileNamesRegex().IsMatch(name.Name))
+				.ToList();
+
+			var groupedByMonth = files
+				.Select(name =>
+				{
+					// Extract MMYYYY from the beginning of the filename (1–2 digit month + 4 digit year)
+					var match = ExtractMonthYearRegex().Match(name.Name);
+					if (!match.Success)
+						return null;
+
+					int month = int.Parse(match.Groups[1].Value);
+					int year = int.Parse(match.Groups[2].Value);
+					return new
+					{
+						FileName = name,
+						Year = year,
+						Month = month,
+						SortKey = new DateTime(year, month, 1),
+						MonthKey = $"{month}{year}"
+					};
+				})
+				.Where(x => x != null)
+				.GroupBy(x => x.MonthKey)
+				.OrderBy(g => g.First().SortKey);
+
+			LogMessage($"Found {files.Count} log files");
+			LogConsole($"Found {files.Count} log files", defConsoleColour);
+
+
+			foreach (var group in groupedByMonth)
 			{
-				var ind = GetYearMonthFromFileName(file.Name);
-				if( ind > 0)
-					fileDict.Add(ind, file);
-			}
+				// first separate the lg file from all the others so we can procress it first
 
-			LogMessage($"Found {fileDict.Count} log files");
-			LogConsole($"Found {fileDict.Count} log files", defConsoleColour);
+				var monthFiles = group.Select(f => f.FileName).ToList();
+				var lgFile = monthFiles.FirstOrDefault(f => f.Name.Equals($"{group.Key}lg.txt", StringComparison.OrdinalIgnoreCase));
 
-			int lastyearmonth = 0;
-
-			foreach (var file in fileDict)
-			{
-				if (lastyearmonth != file.Item1)
+				// if monthlog.length > 0 then process it
+				if (LogFileRecords.Count > 0)
 				{
-					if (lastyearmonth == 0)
+					WriteLogFile();
+
+					/*
+					// WD logs have the first record of the next month as the last record of the previous month
+					var logTim = LogFileRecords.Last().Key;
+					var logRec = LogFileRecords.Last().Value;
+					*/
+
+					// clear the list
+					LogFileRecords.Clear();
+
+					/*
+					// if the last record is for this next month then add it to the next month
+					if (group.Key == logTim.Month.ToString("D2") + logTim.Year.ToString())
 					{
-						// starting up
-						lastyearmonth = file.Item1;
-						CurrMonth = file.Item1 % 100;
-						CurrYear = file.Item1 / 100;
+						LogFileRecords.Add(logTim, logRec);
 					}
-					else
+					*/
+				}
+
+
+				if (lgFile != null)
+				{
+					string[] lines;
+
+					try
 					{
-						// new month, close off the previous month
-
-						// if monthlog.length > 0 then process it
-						if (LogFileRecords.Count > 0)
-						{
-							WriteLogFile();
-
-							// WD logs have the first record of the next month as the last record of the previous month
-							var logTim = LogFileRecords.Last().Key;
-							var logRec = LogFileRecords.Last().Value;
-
-							// clear the list
-							LogFileRecords.Clear();
-
-							// if the last record is for this next month then add it to the next month
-							if (file.Item1 == logTim.Year * 100 + logTim.Month)
-							{
-								LogFileRecords.Add(logTim, logRec);
-							}
-						}
-
-						// if extramonthlog.length > 0 then process it
-						if (ExtraLogFileRecords.Count > 0)
-						{
-							WriteExtraLogFile();
-
-							// WD logs have the first record of the next month as the last record of the previous month
-							var logTim = ExtraLogFileRecords.Last().Key;
-							var logRec = ExtraLogFileRecords.Last().Value;
-
-							// clear the list
-							ExtraLogFileRecords.Clear();
-
-							// if the last record is for this next month then add it to the next month
-							if (file.Item1 == logTim.Year * 100 + logTim.Month)
-							{
-								ExtraLogFileRecords.Add(logTim, logRec);
-							}
-						}
-
-						lastyearmonth = file.Item1;
-						CurrMonth = file.Item1 % 100;
-						CurrYear = file.Item1 / 100;
+						lines = File.ReadAllLines(lgFile.FullName);
 					}
-				}
-
-				LogMessage($"Processing file {file.Item2.Name}...");
-				LogConsole($"Processing file {file.Item2.Name}...", defConsoleColour);
-
-				// determine the log file type
-				var logType = GetLogType(file.Item2.Name);
-
-				// open and read the file
-				string[] lines;
-
-				try
-				{
-					lines = File.ReadAllLines(file.Item2.FullName);
-				}
-				catch (Exception ex)
-				{
-					LogMessage($"Error opening file {file.Item2.FullName} - {ex.Message}");
-					LogConsole($"Error opening file {file.Item2.FullName} - {ex.Message}", ConsoleColor.Red);
-					LogConsole("Skipping to next file", defConsoleColour);
-					// abort this file
-					continue;
-				}
-
-				// foreach line in the file - skip the first line
-				foreach (var line in lines[1..])
-				{
-					// process line according to log type
-					switch (logType)
+					catch (Exception ex)
 					{
-						case "lg":
-							var lg = new WdLgRecord(line);
-							if (lg.Timestamp.HasValue)
-							{
-								ProcessLgRecord(lg);
-							}
-							break;
+						LogMessage($"Error opening file {lgFile.FullName} - {ex.Message}");
+						LogConsole($"Error opening file {lgFile.Name} - {ex.Message}", ConsoleColor.Red);
+						LogConsole("Skipping to next file", defConsoleColour);
+						// abort this file
+						continue;
+					}
 
-						case "vantagelog":
-							var van = new WdVantageRecord(line);
-							if (van.Timestamp.HasValue)
-							{
-								ProcessVantageRecord(van);
-							}
-							break;
+					foreach (var line in lines[1..])
+					{
+						var lg = new WdLgRecord(line);
+						if (lg.Timestamp.HasValue)
+						{
+							ProcessLgRecord(lg);
+						}
+					}
 
-						case "vantageextrasensorslog":
-							var vanex = new WdVantageExtraRecord(line);
-							if (vanex.Timestamp.HasValue)
-							{
-								ProcessVantageExtraRecord(vanex);
-							}
-							break;
+					monthFiles.Remove(lgFile);
+				}
+				else
+				{
+					// no Lg file found for this month, so skipping to next month
+					LogMessage($"No lg file found for month {group.Key}, skipping to next month");
+					continue; // skip processing if no Lg file
+				}
 
-						case "extralog":
-							var ex = new WdExtraSensorsRecord(line);
-							if (ex.Timestamp.HasValue)
-							{
-								ProcessExtraSensorsRecord(ex);
-							}
-							break;
 
-						case "indoorlog":
-							var ind = new WdIndoorRecord(line);
-							if (ind.Timestamp.HasValue)
-							{
-								ProcessIndoorRecord(ind);
-							}
-							break;
+				// do all the extra files
+				foreach (var file in monthFiles)
+				{
+					// new month, close off the previous month
+
+					// if extramonthlog.length > 0 then process it
+					if (ExtraLogFileRecords.Count > 0)
+					{
+						WriteExtraLogFile();
+						/*
+						// WD logs have the first record of the next month as the last record of the previous month
+						var logTim = ExtraLogFileRecords.Last().Key;
+						var logRec = ExtraLogFileRecords.Last().Value;
+						*/
+
+						// clear the list
+						ExtraLogFileRecords.Clear();
+
+						/*
+						// if the last record is for this next month then add it to the next month
+						if (group.Key == logTim.Month.ToString("D2") + logTim.Year)
+						{
+							ExtraLogFileRecords.Add(logTim, logRec);
+						}
+						*/
+					}
+
+					LogMessage($"Processing file {file.FullName}...");
+					LogConsole($"Processing file {file.Name}...", defConsoleColour);
+
+					// determine the log file type
+					var logType = GetLogType(file.Name);
+
+					// open and read the file
+					string[] lines;
+
+					try
+					{
+						lines = File.ReadAllLines(file.FullName);
+					}
+					catch (Exception ex)
+					{
+						LogMessage($"Error opening file {file.FullName} - {ex.Message}");
+						LogConsole($"Error opening file {file.FullName} - {ex.Message}", ConsoleColor.Red);
+						LogConsole("Skipping to next file", defConsoleColour);
+						// abort this file
+						continue;
+					}
+
+					// foreach line in the file - skip the first line
+					foreach (var line in lines[1..])
+					{
+						// process line according to log type
+						switch (logType)
+						{
+							case "vantagelog":
+								var van = new WdVantageRecord(line);
+								if (van.Timestamp.HasValue)
+								{
+									ProcessVantageRecord(van);
+								}
+								break;
+
+							case "vantageextrasensorslog":
+								var vanex = new WdVantageExtraRecord(line);
+								if (vanex.Timestamp.HasValue)
+								{
+									ProcessVantageExtraRecord(vanex);
+								}
+								break;
+
+							case "extralog":
+								var ex = new WdExtraSensorsRecord(line);
+								if (ex.Timestamp.HasValue)
+								{
+									ProcessExtraSensorsRecord(ex);
+								}
+								break;
+
+							case "indoorlog":
+								var ind = new WdIndoorRecord(line);
+								if (ind.Timestamp.HasValue)
+								{
+									ProcessIndoorRecord(ind);
+								}
+								break;
+						}
 					}
 				}
 			}
@@ -375,65 +433,67 @@ namespace ImportWD
 		{
 			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
+			if (!rec.Timestamp.HasValue)
 			{
-				if (!rec.Timestamp.HasValue)
-					return;
+				return;
+			}
 
-				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
+			if (!LogFileRecords.ContainsKey(rec.Timestamp ?? DateTime.MinValue))
+			{
+
+				if (rec.Timestamp.Value.Month != CurrMonth)
 				{
-					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
+					Program.LogMessage("Skipping record for as it is for the wrong month");
+					Program.LogMessage($"Record Date: {rec.Timestamp.Value:Gyyyy-MM-dd HH:mm}, Current month: {CurrMonth}");
+					return; // skip records from the next month if the month has changed
 				}
 
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
+				logRec.Temperature = rec.OutsideTemp;
+				logRec.Humidity = rec.OutsideHumidity;
+				logRec.Dewpoint = rec.Dewpoint;
+				logRec.Baro = rec.Baro;
+				logRec.WindSpeed = rec.WindSpeed;
+				logRec.WindGust = rec.WindGust;
+				logRec.WindBearing = rec.WindDir;
+				logRec.Baro = rec.Baro;
+				logRec.RainfallRate = rec.RainRate;
+				logRec.RainfallToday = rec.RainDay;
+				logRec.RainfallCounter = rec.RainYear;
+				logRec.HeatIndex = rec.HeatIndex;
 			}
-
-			logRec.Temperature = rec.OutsideTemp;
-			logRec.Humidity = rec.OutsideHumidity;
-			logRec.Dewpoint = rec.Dewpoint;
-			logRec.Baro = rec.Baro;
-			logRec.WindSpeed = rec.WindSpeed;
-			logRec.WindGust = rec.WindGust;
-			logRec.WindBearing = rec.WindDir;
-			logRec.Baro = rec.Baro;
-			logRec.RainfallRate = rec.RainRate;
-			logRec.RainfallToday = rec.RainDay;
-			logRec.RainfallCounter = rec.RainYear;
-			logRec.HeatIndex = rec.HeatIndex;
+			else
+			{
+				Program.LogMessage("Duplicate lg file record found for " + (rec.Timestamp ?? DateTime.MinValue).ToString("yyyy-MM-dd HH:mm:ss"));
+				Program.LogConsole("Duplicate lg file record found for " + (rec.Timestamp ?? DateTime.MinValue).ToString("yyyy-MM-dd HH:mm:ss"), ConsoleColor.Red);
+				var logRecOld = LogFileRecords[rec.Timestamp ?? DateTime.MinValue];
+				Program.LogMessage("Existing record: " + logRecOld.ToString());
+				Program.LogMessage("New WD record  : " + rec.ToString());
+			}
 		}
 
 		private static void ProcessVantageRecord(WdVantageRecord rec)
 		{
 			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
+			if (!rec.Timestamp.HasValue)
 			{
-				if (!rec.Timestamp.HasValue)
-					return;
-
-				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
-				{
-					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
-				}
-
-				logRec = new LogFileRecord(rec.Timestamp.Value);
-				LogFileRecords.Add(rec.Timestamp.Value, logRec);
+				return;
 			}
 
-			logRec.SolarRad = rec.SolarRad;
-			logRec.UVI = rec.UVI;
-			logRec.ET = rec.ET;
+			// only update the record if it exists
+			if (LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
+			{
+				logRec.SolarRad = rec.SolarRad;
+				logRec.UVI = rec.UVI;
+				logRec.ET = rec.ET;
+			}
 
 			ExtraLogFileRecord? extraLogRec;
 
 			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
-				if (!rec.Timestamp.HasValue)
-				{
-					return;
-				}
-
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
@@ -446,31 +506,28 @@ namespace ImportWD
 		{
 			ExtraLogFileRecord? extraLogRec;
 
+			if (!rec.Timestamp.HasValue || rec.Timestamp.Value.Month != CurrMonth)
+			{
+				return;
+			}
+
+			// if the record does not exist, create it
 			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
 			{
-				if (!rec.Timestamp.HasValue)
-				{
-					return;
-				}
-
-				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
-				{
-					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
-				}
-
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
 
+			// update the existing record
 			for (var i = 0; i < 8; i++)
 			{
-				extraLogRec.Temperature[i+1] = rec.Temp[i];
-				extraLogRec.Humidity[i+1] = rec.Hum[i];
+				extraLogRec.Temperature[i + 1] = rec.Temp[i];
+				extraLogRec.Humidity[i + 1] = rec.Hum[i];
 
 				if (rec.Temp[i].HasValue && rec.Hum[i].HasValue)
 				{
 					// calculate the dew point
-					extraLogRec.Dewpoint[i+1] = ConvertUnits.TempCToUser(MeteoLib.DewPoint(ConvertUnits.UserTempToC(rec.Temp[i].Value), rec.Hum[i].Value));
+					extraLogRec.Dewpoint[i + 1] = ConvertUnits.TempCToUser(MeteoLib.DewPoint(ConvertUnits.UserTempToC(rec.Temp[i].Value), rec.Hum[i].Value));
 				}
 			}
 		}
@@ -480,22 +537,19 @@ namespace ImportWD
 		{
 			ExtraLogFileRecord? extraLogRec;
 
-			if (!ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
+			if (!rec.Timestamp.HasValue || rec.Timestamp.Value.Month != CurrMonth)
 			{
-				if (!rec.Timestamp.HasValue)
-				{
-					return;
-				}
+				return;
+			}
 
-				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
-				{
-					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Local);
-				}
-
+			// if the record does not exist, create it
+			if (ExtraLogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out extraLogRec))
+			{
 				extraLogRec = new ExtraLogFileRecord(rec.Timestamp.Value);
 				ExtraLogFileRecords.Add(rec.Timestamp.Value, extraLogRec);
 			}
 
+			// update the existing record
 			for (var i = 0; i < 9; i++)
 			{
 				extraLogRec.Temperature[i] = rec.Temp[i];
@@ -514,24 +568,16 @@ namespace ImportWD
 		{
 			LogFileRecord? logRec;
 
-			if (!LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
+			if (!rec.Timestamp.HasValue)
 			{
-				if (!rec.Timestamp.HasValue)
-				{
-					return;
-				}
-
-				if (rec.Timestamp.Value.Month != CurrMonth && CurrMonth == 12 && rec.Timestamp.Value.Month == 1 && CurrYear == rec.Timestamp.Value.Year)
-				{
-					rec.Timestamp = new DateTime(CurrYear + 1, 1, 1, 0,	0, 0, DateTimeKind.Local);
-				}
-
-				logRec = new LogFileRecord(rec.Timestamp.Value);
-				LogFileRecords.Add(rec.Timestamp.Value, logRec);
+				return;
 			}
 
-			logRec.InsideTemp = rec.Temp;
-			logRec.InsideHum = rec.Hum;
+			if (LogFileRecords.TryGetValue(rec.Timestamp ?? DateTime.MinValue, out logRec))
+			{
+				logRec.InsideTemp = rec.Temp;
+				logRec.InsideHum = rec.Hum;
+			}
 		}
 
 		private static void WriteLogFile()

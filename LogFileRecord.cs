@@ -212,5 +212,25 @@ namespace ImportWD
 
 			return sb.ToString();
 		}
+
+		public override string ToString()
+		{
+			var inv = CultureInfo.InvariantCulture;
+			var sb = new StringBuilder(256);
+			sb.Append("LogFileRecord: ");
+			sb.Append("LogTime=" + LogTime.ToString("yyyy-MM-dd HH:mm:ss", inv) + ", ");
+			sb.Append("Temperature=" + Temperature?.ToString(Program.Cumulus.TempFormat, inv) + ", ");
+			sb.Append("Humidity=" + Humidity?.ToString() + ", ");
+			sb.Append("Dewpoint=" + Dewpoint?.ToString(Program.Cumulus.TempFormat, inv) + ", ");
+			sb.Append("WindSpeed=" + WindSpeed?.ToString(Program.Cumulus.WindAvgFormat, inv) + ", ");
+			sb.Append("WindGust=" + WindGust?.ToString(Program.Cumulus.WindAvgFormat, inv) + ", ");
+			sb.Append("WindBearing=" + WindBearing?.ToString() + ", ");
+			sb.Append("RainfallRate=" + RainfallRate?.ToString(Program.Cumulus.RainFormat, inv) + ", ");
+			sb.Append("RainfallToday=" + RainfallToday?.ToString(Program.Cumulus.RainFormat, inv) + ", ");
+			sb.Append("Baro=" + Baro?.ToString(Program.Cumulus.PressFormat, inv) + ", ");
+			sb.Append("RainfallCounter=" + RainfallCounter?.ToString(Program.Cumulus.RainFormat, inv) + ", ");
+
+			return sb.ToString();
+		}
 	}
 }
