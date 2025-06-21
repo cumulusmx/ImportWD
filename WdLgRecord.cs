@@ -38,9 +38,16 @@ namespace ImportWD
 		public double? RainYear { get; private set; }
 		public double? HeatIndex { get; private set; }
 
-		public WdLgRecord(string entry)
+		public WdLgRecord(string entry, int lineNo)
 		{
 			var arr = entry.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+			if (arr.Length < 17)
+			{
+				Program.LogMessage($"  Line {lineNo}: Error parsing entry: {entry}");
+				Program.LogConsole("  Error parsing entry: " + entry, ConsoleColor.Red);
+				return;
+			}
 
 			try
 			{
@@ -48,7 +55,7 @@ namespace ImportWD
 			}
 			catch(Exception ex)
 			{
-				Program.LogMessage("  Error parsing date/time fields: " + ex.Message);
+				Program.LogMessage($"  Line {lineNo}: Error parsing date/time fields: {ex.Message}");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing date/time fields: " + ex.Message, ConsoleColor.Red);
 				return;
@@ -61,7 +68,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 6 (temperature)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 6 (temperature)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 6 (temperature)", ConsoleColor.Red);
 			}
@@ -72,7 +79,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 7 (humidity)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 7 (humidity)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 7 (humidity)", ConsoleColor.Red);
 			}
@@ -83,7 +90,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 8 (temperature)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 8 (temperature)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 8 (temperature)", ConsoleColor.Red);
 			}
@@ -94,7 +101,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 9 (pressure)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 9 (pressure)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 9 (pressure)", ConsoleColor.Red);
 			}
@@ -111,7 +118,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 10 (wind speed)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 10 (wind speed)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 10 (wind speed)", ConsoleColor.Red);
 			}
@@ -128,7 +135,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 11 (wind gust)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 11 (wind gust)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 11 (wind gust)", ConsoleColor.Red);
 			}
@@ -139,7 +146,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 12 (wind direction)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 12 (wind direction)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 12 (wind direction)", ConsoleColor.Red);
 			}
@@ -150,7 +157,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 13 (rain 1 hr");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 13 (rain 1 hr");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 13 (rain 1 hr)", ConsoleColor.Red);
 			}
@@ -161,7 +168,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 14 (rain day");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 14 (rain day");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 14 (rain day)", ConsoleColor.Red);
 			}
@@ -172,7 +179,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 15 (rain month");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 15 (rain month");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 15 (rain month)", ConsoleColor.Red);
 			}
@@ -183,7 +190,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 16 (rain year");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 16 (rain year");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 16 (rain year)", ConsoleColor.Red);
 			}
@@ -194,7 +201,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 17 (heat index)");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 17 (heat index)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 17 (heat index)", ConsoleColor.Red);
 			}

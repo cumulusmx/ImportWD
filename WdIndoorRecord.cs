@@ -21,9 +21,16 @@ namespace ImportWD
 
 
 
-		public WdIndoorRecord(string entry)
+		public WdIndoorRecord(string entry, int lineNo)
 		{
 			var arr = entry.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+			if (arr.Length < 7)
+			{
+				Program.LogMessage($"  Line {lineNo}: Error parsing entry: " + entry);
+				Program.LogConsole("  Error parsing entry: " + entry, ConsoleColor.Red);
+				return;
+			}
 
 			try
 			{
@@ -31,7 +38,7 @@ namespace ImportWD
 			}
 			catch (Exception ex)
 			{
-				Program.LogMessage("  Error parsing date/time fields: " + ex.Message);
+				Program.LogMessage($"  Line {lineNo}: Error parsing date/time fields: " + ex.Message);
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing date/time fields: " + ex.Message, ConsoleColor.Red);
 				return;
@@ -44,7 +51,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 6 (temperature})");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 6 (temperature)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 6 (temperature})", ConsoleColor.Red);
 			}
@@ -55,7 +62,7 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("  Error parsing field 6 (humidity})");
+				Program.LogMessage($"  Line {lineNo}: Error parsing field 6 (humidity)");
 				Program.LogMessage("  Error line: " + entry);
 				Program.LogConsole("  Error parsing field 6 (humidity})", ConsoleColor.Red);
 			}

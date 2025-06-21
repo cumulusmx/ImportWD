@@ -178,6 +178,9 @@ namespace ImportWD
 				{
 					string[] lines;
 
+					LogMessage($"Processing file {lgFile.FullName}...");
+					LogConsole($"Processing file {lgFile.Name}...", defConsoleColour);
+
 					try
 					{
 						lines = File.ReadAllLines(lgFile.FullName);
@@ -191,12 +194,14 @@ namespace ImportWD
 						continue;
 					}
 
-					foreach (var line in lines[1..])
+					CurrMonth = GetMonthFromFileName(lgFile.Name);
+
+					for (var i = 1; i < lines.Length; i++)
 					{
-						var lg = new WdLgRecord(line);
+						var lg = new WdLgRecord(lines[i], i+1);
 						if (lg.Timestamp.HasValue)
 						{
-							ProcessLgRecord(lg);
+							ProcessLgRecord(lg, i+1);
 						}
 					}
 
@@ -260,13 +265,14 @@ namespace ImportWD
 					}
 
 					// foreach line in the file - skip the first line
-					foreach (var line in lines[1..])
+					for (var i = 1; i < lines.Length; i++)
 					{
+						var line = lines[i];
 						// process line according to log type
 						switch (logType)
 						{
 							case "vantagelog":
-								var van = new WdVantageRecord(line);
+								var van = new WdVantageRecord(line, i + 1);
 								if (van.Timestamp.HasValue)
 								{
 									ProcessVantageRecord(van);
@@ -274,7 +280,7 @@ namespace ImportWD
 								break;
 
 							case "vantageextrasensorslog":
-								var vanex = new WdVantageExtraRecord(line);
+								var vanex = new WdVantageExtraRecord(line, i + 1);
 								if (vanex.Timestamp.HasValue)
 								{
 									ProcessVantageExtraRecord(vanex);
@@ -282,7 +288,7 @@ namespace ImportWD
 								break;
 
 							case "extralog":
-								var ex = new WdExtraSensorsRecord(line);
+								var ex = new WdExtraSensorsRecord(line, i + 1);
 								if (ex.Timestamp.HasValue)
 								{
 									ProcessExtraSensorsRecord(ex);
@@ -290,7 +296,7 @@ namespace ImportWD
 								break;
 
 							case "indoorlog":
-								var ind = new WdIndoorRecord(line);
+								var ind = new WdIndoorRecord(line, i + 1);
 								if (ind.Timestamp.HasValue)
 								{
 									ProcessIndoorRecord(ind);
@@ -418,6 +424,16 @@ namespace ImportWD
 			return 0;
 		}
 
+		private static int GetMonthFromFileName(string fileName)
+		{
+			var match = ExtractMonthYearRegex().Match(fileName);
+			if (match.Success)
+			{
+				return int.Parse(match.Groups[1].Value);
+			}
+			return 0;
+		}
+
 		private static string GetLogType(string fileName)
 		{
 			string pattern = @"^\d{5,6}(\w+)";
@@ -429,7 +445,7 @@ namespace ImportWD
 			return "";
 		}
 
-		private static void ProcessLgRecord(WdLgRecord rec)
+		private static void ProcessLgRecord(WdLgRecord rec, int lineNo)
 		{
 			LogFileRecord? logRec;
 
@@ -440,11 +456,10 @@ namespace ImportWD
 
 			if (!LogFileRecords.ContainsKey(rec.Timestamp ?? DateTime.MinValue))
 			{
-
 				if (rec.Timestamp.Value.Month != CurrMonth)
 				{
 					Program.LogMessage("Skipping record for as it is for the wrong month");
-					Program.LogMessage($"Record Date: {rec.Timestamp.Value:Gyyyy-MM-dd HH:mm}, Current month: {CurrMonth}");
+					Program.LogMessage($"Record Date: {rec.Timestamp.Value:yyyy-MM-dd HH:mm}, Current month: {CurrMonth}");
 					return; // skip records from the next month if the month has changed
 				}
 
@@ -465,11 +480,11 @@ namespace ImportWD
 			}
 			else
 			{
-				Program.LogMessage("Duplicate lg file record found for " + (rec.Timestamp ?? DateTime.MinValue).ToString("yyyy-MM-dd HH:mm:ss"));
+				Program.LogMessage($"Line {lineNo}: Duplicate lg file record found for " + (rec.Timestamp ?? DateTime.MinValue).ToString("yyyy-MM-dd HH:mm:ss"));
 				Program.LogConsole("Duplicate lg file record found for " + (rec.Timestamp ?? DateTime.MinValue).ToString("yyyy-MM-dd HH:mm:ss"), ConsoleColor.Red);
 				var logRecOld = LogFileRecords[rec.Timestamp ?? DateTime.MinValue];
-				Program.LogMessage("Existing record: " + logRecOld.ToString());
-				Program.LogMessage("New WD record  : " + rec.ToString());
+				Program.LogMessage("  Existing record: " + logRecOld.ToString());
+				Program.LogMessage("  New WD record : " + rec.ToString());
 			}
 		}
 
