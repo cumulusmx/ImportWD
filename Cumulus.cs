@@ -242,12 +242,16 @@ namespace ImportWD
 
 		public static string GetLogFileName(DateTime thedate)
 		{
-			return thedate.ToString("yyyyMM") + "log.txt";
+			var datestring = thedate.ToString("yyyyMM");
+			datestring = datestring.Replace(".", "");
+			return datestring + "log.txt";
 		}
 
 		public static string GetExtraLogFileName(DateTime thedate)
 		{
-			return "ExtraLog" + thedate.ToString("yyyyMM") + "log.txt";
+			var datestring = thedate.ToString("yyyyMM");
+			datestring = datestring.Replace(".", "");
+			return "ExtraLog" + datestring + ".txt";
 		}
 
 	}

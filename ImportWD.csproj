@@ -5,7 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.0.7</Version>
+    <Version>1.0.0</Version>
     <StartupObject>ImportWD.Program</StartupObject>
     <Copyright>Copyright ©  2024-$([System.DateTime]::Now.ToString('yyyy')) Cumulus MX</Copyright>
     <Authors>Cumulus MX</Authors>
