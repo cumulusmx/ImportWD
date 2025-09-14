@@ -26,7 +26,7 @@ namespace ImportWD
 
 		public DateTime? Timestamp { get; set; }
 		public double? OutsideTemp { get; private set; }
-		public int? OutsideHumidity { get; private set; }
+		public double? OutsideHumidity { get; private set; }
 		public double? Dewpoint { get; private set; }
 		public double? Baro { get; private set; }
 		public double? WindSpeed { get; private set; }
@@ -73,7 +73,7 @@ namespace ImportWD
 				Program.LogConsole("  Error parsing field 6 (temperature)", ConsoleColor.Red);
 			}
 
-			if (int.TryParse(arr[6], out int hum))
+			if (double.TryParse(arr[6], CultureInfo.InvariantCulture, out double hum))
 			{
 				OutsideHumidity = hum;
 			}
@@ -215,7 +215,7 @@ namespace ImportWD
 			sb.Append("LgFileRecord : ");
 			sb.Append("LogTime=" + Timestamp?.ToString("yyyy-MM-dd HH:mm:ss", inv) + ", ");
 			sb.Append("Temperature=" + OutsideTemp?.ToString(Program.Cumulus.TempFormat, inv)  + ", ");
-			sb.Append("Humidity=" + OutsideHumidity?.ToString() + ", ");
+			sb.Append("Humidity=" + OutsideHumidity?.ToString(Program.Cumulus.TempFormat, inv) + ", ");
 			sb.Append("Dewpoint=" + Dewpoint?.ToString(Program.Cumulus.TempFormat, inv) + ", ");
 			sb.Append("WindSpeed=" + WindSpeed?.ToString(Program.Cumulus.WindFormat, inv) + ", ");
 			sb.Append("WindGust=" + WindGust?.ToString(Program.Cumulus.WindFormat, inv) + ", ");

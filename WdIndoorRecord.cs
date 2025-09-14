@@ -17,7 +17,7 @@ namespace ImportWD
 
 		public double? Temp { get; private set; }
 
-		public int? Hum { get; private set; }
+		public double? Hum { get; private set; }
 
 
 
@@ -56,7 +56,7 @@ namespace ImportWD
 				Program.LogConsole("  Error parsing field 6 (temperature})", ConsoleColor.Red);
 			}
 
-			if (int.TryParse(arr[6], out int hum))
+			if (double.TryParse(arr[6], CultureInfo.InvariantCulture, out double hum))
 			{
 				Hum = hum;
 			}

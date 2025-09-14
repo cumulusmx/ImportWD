@@ -132,7 +132,7 @@ namespace ImportWD
 				sb.Append(sep);
 
 			if (InsideHum.HasValue)
-				sb.Append(InsideHum.Value.ToString() + sep);
+				sb.Append(InsideHum.Value.ToString("F0") + sep);
 			else
 				sb.Append(sep);
 

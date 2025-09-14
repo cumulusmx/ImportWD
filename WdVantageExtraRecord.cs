@@ -29,7 +29,7 @@ namespace ImportWD
 
 		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null];
 
-		public int?[] Hum { get; private set; } = [null, null, null, null, null, null, null];
+		public double?[] Hum { get; private set; } = [null, null, null, null, null, null, null];
 
 
 		public WdVantageExtraRecord(string entry, int lineNo)
@@ -73,7 +73,7 @@ namespace ImportWD
 
 			for (var i = 12; i < 19; i++)
 			{
-				if (int.TryParse(arr[i], out int hum))
+				if (double.TryParse(arr[i], CultureInfo.InvariantCulture, out double hum))
 				{
 					Hum[i - 12] = hum;
 				}

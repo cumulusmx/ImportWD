@@ -34,7 +34,7 @@ namespace ImportWD
 
 		public double?[] Temp { get; private set; } = [null, null, null, null, null, null, null, null, null];
 
-		public int?[] Hum { get; private set; } = [null, null, null, null, null, null, null, null, null];
+		public double?[] Hum { get; private set; } = [null, null, null, null, null, null, null, null, null];
 
 
 		public WdExtraSensorsRecord(string entry, int lineNo)
@@ -79,7 +79,7 @@ namespace ImportWD
 			// humidity in fileds 6, 8,10 etc
 			for (var i = 6; i < arr.Length; i += 2)
 			{
-				if (int.TryParse(arr[i], out int hum))
+				if (double.TryParse(arr[i], CultureInfo.InvariantCulture, out double hum))
 				{
 					if (hum > -100)
 					{

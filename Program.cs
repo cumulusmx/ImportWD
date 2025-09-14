@@ -466,7 +466,7 @@ namespace ImportWD
 				logRec = new LogFileRecord(rec.Timestamp.Value);
 				LogFileRecords.Add(rec.Timestamp.Value, logRec);
 				logRec.Temperature = rec.OutsideTemp;
-				logRec.Humidity = rec.OutsideHumidity;
+				logRec.Humidity = (int?) rec.OutsideHumidity;
 				logRec.Dewpoint = rec.Dewpoint;
 				logRec.Baro = rec.Baro;
 				logRec.WindSpeed = rec.WindSpeed;
@@ -537,7 +537,7 @@ namespace ImportWD
 			for (var i = 0; i < 8; i++)
 			{
 				extraLogRec.Temperature[i + 1] = rec.Temp[i];
-				extraLogRec.Humidity[i + 1] = rec.Hum[i];
+				extraLogRec.Humidity[i + 1] = (int?) rec.Hum[i];
 
 				if (rec.Temp[i].HasValue && rec.Hum[i].HasValue)
 				{
@@ -568,7 +568,7 @@ namespace ImportWD
 			for (var i = 0; i < 9; i++)
 			{
 				extraLogRec.Temperature[i] = rec.Temp[i];
-				extraLogRec.Humidity[i] = rec.Hum[i];
+				extraLogRec.Humidity[i] = (int?) rec.Hum[i];
 
 				if (rec.Temp[i].HasValue && rec.Hum[i].HasValue)
 				{
