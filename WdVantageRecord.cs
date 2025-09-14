@@ -47,7 +47,7 @@ namespace ImportWD
 			}
 
 			// skip the first five entries (date/time)
-			if (double.TryParse(arr[5], out double sol))
+			if (double.TryParse(arr[5], CultureInfo.InvariantCulture, out double sol))
 			{
 				SolarRad = (int) sol;
 			}
@@ -80,7 +80,7 @@ namespace ImportWD
 				Program.LogConsole("  Error parsing field 8 (ET)", ConsoleColor.Red);
 			}
 
-			if (double.TryParse(arr[8], out double sm))
+			if (double.TryParse(arr[8], CultureInfo.InvariantCulture, out double sm))
 			{
 				if (sm < 255)
 					SoilMoisture = (int) sm;
