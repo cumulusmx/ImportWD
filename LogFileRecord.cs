@@ -38,8 +38,8 @@ namespace ImportWD
 		public string RecToCsv()
 		{
 			// Writes an entry to the n-minute log file. Fields are comma-separated:
-			// 0  Date in the form dd/mm/yy (the slash may be replaced by a dash in some cases)
-			// 1  Current time - hh:mm
+			// 0  Date in the form dd/mm/yy hh:mm
+			// 1  Unix Timestamp
 			// 2  Current temperature
 			// 3  Current humidity
 			// 4  Current dewpoint
@@ -74,8 +74,8 @@ namespace ImportWD
 			var sep = ",";
 
 			var sb = new StringBuilder(256);
-			sb.Append(LogTime.ToString("dd/MM/yy", inv) + sep);
-			sb.Append(LogTime.ToString("HH:mm", inv) + sep);
+			sb.Append(LogTime.ToString("dd/MM/yy HH:mm", inv) + sep);
+			sb.Append(new DateTimeOffset(LogTime).ToUnixTimeSeconds() + sep);
 			if (Temperature.HasValue)
 				sb.Append(Temperature.Value.ToString(Program.Cumulus.TempFormat, inv) + sep);
 			else
