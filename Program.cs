@@ -395,7 +395,7 @@ namespace ImportWD
 			}
 
 			WdConfigWind = ini.GetValue("units", "wind", "");
-			if (WdConfigWind == "" || (WdConfigWind != "kph" && WdConfigWind != "mps" && WdConfigWind != "mph" && WdConfigWind != "knots"))
+			if (WdConfigWind == "" || (WdConfigWind != "kph" && WdConfigWind != @"m/s" && WdConfigWind != "mph" && WdConfigWind != "knots"))
 			{
 				Program.LogMessage("Failed to find wind units in wd_config.ini");
 				Console.WriteLine("Failed to find wind units in wd_config.ini");

@@ -111,7 +111,7 @@ namespace ImportWD
 				switch (Program.WdConfigWind)
 				{
 					case "kph": WindSpeed = ConvertUnits.WindKPHToUser(wind); break;
-					case "ms": WindSpeed = ConvertUnits.WindMSToUser(wind); break;
+					case "m/s": WindSpeed = ConvertUnits.WindMSToUser(wind); break;
 					case "mph": WindSpeed = ConvertUnits.WindMPHToUser(wind); break;
 					case "knots": WindSpeed = ConvertUnits.WindKnotsToUser(wind); break;
 				}
@@ -128,7 +128,7 @@ namespace ImportWD
 				switch (Program.WdConfigWind)
 				{
 					case "kph": WindGust = ConvertUnits.WindKPHToUser(gust); break;
-					case "ms": WindGust = ConvertUnits.WindMSToUser(gust); break;
+					case "m/s": WindGust = ConvertUnits.WindMSToUser(gust); break;
 					case "mph": WindGust = ConvertUnits.WindMPHToUser(gust); break;
 					case "knots": WindGust = ConvertUnits.WindKnotsToUser(gust); break;
 				}
